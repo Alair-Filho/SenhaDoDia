@@ -1,0 +1,5 @@
+requests
+cryptography
+pyperclip
+pywin32
+pyinstaller

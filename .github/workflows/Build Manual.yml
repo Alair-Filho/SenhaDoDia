@@ -1,0 +1,41 @@
+name: Build Manual
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Compilar SenhaDoDia_4.0 (com GUI)
+        run: |
+          pyinstaller --onefile --add-data "track.wav;." --windowed --icon=icon.ico SenhaDoDia_4.0.py
+          if not exist dist\SenhaDoDia_4.0.exe exit /b 1
+        shell: cmd
+
+      - name: Verificar arquivos gerados
+        run: dir dist
+
+      - name: Criar release como rascunho e fazer upload dos executáveis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          gh release create "draft-$(date +%Y%m%d%H%M%S)" --draft --title "Draft Release" --notes "Executáveis gerados manualmente" dist\SenhaDoDia_4.0.exe
+        shell: cmd
