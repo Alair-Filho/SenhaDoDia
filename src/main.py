@@ -27,6 +27,7 @@ PALETAS = {
     "Verde": "#16a34a",
     "Laranja": "#f97316",
     "Rosa": "#db2777",
+    "Cinza": "#6b7280"
 }
 
 PRIMARY_LIGHT = PALETAS["Roxo"]   # cor do modo claro (persistente)
@@ -416,15 +417,15 @@ btn_tema = tk.Button(
     bg=CARD_COLOR,
     width=1,
     height=1,
-    padx=3,
-    pady=1,
+    padx=10,
+    pady=10,
     anchor="center",
     cursor="hand2",
     activebackground=CARD_COLOR,
     highlightthickness=0,
     bd=0
 )
-btn_tema.place(x=-6, y=-6)
+btn_tema.place(x=-8, y=-8)
 
 btn_cores = tk.Button(
     card,
@@ -435,15 +436,15 @@ btn_cores = tk.Button(
     bg=CARD_COLOR,
     width=1,
     height=1,
-    padx=3,
-    pady=1,
+    padx=5,
+    pady=2,
     anchor="center",
     cursor="hand2",
     activebackground=CARD_COLOR,
     highlightthickness=0,
     bd=0
 )
-btn_cores.place(x=22, y=-6)
+btn_cores.place(x=22, y=-8)
 
 lbl_usuario = tk.Label(card, text="E-mail", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
 lbl_usuario.grid(row=1, column=0, columnspan=2, pady=(2, 0))
