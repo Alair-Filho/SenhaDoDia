@@ -1,6 +1,6 @@
 def aplicar_tema(janela, container, card, widgets, entries, botoes, tema_escuro: bool):
     if tema_escuro:
-        bg_janela = "#1f2933"
+        bg_janela = "#2d2d2d"
         bg_card = "#2d2d2d"
         fg_texto = "white"
         fg_muted = "#9ca3af"
@@ -9,12 +9,12 @@ def aplicar_tema(janela, container, card, widgets, entries, botoes, tema_escuro:
         bg_btn = "#3f3f3f"
         fg_btn = "white"
     else:
-        bg_janela = "#f4f6f8"
-        bg_card = "#ffffff"
+        bg_janela = "#f3f4f6"
+        bg_card = "#f3f4f6"
         fg_texto = "#111827"
         fg_muted = "#6b7280"
         fg_success = "#16a34a"
-        bg_entry = "white"
+        bg_entry = "#f3f4f6"
         bg_btn = "#4f46e5"
         fg_btn = "white"
 

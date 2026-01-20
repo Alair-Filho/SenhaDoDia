@@ -142,6 +142,10 @@ def atualizar_atalho():
         ["VetorFarma.lnk", "VetorFiscal.lnk"]
     )
 
+def abrir_vetorfarma():
+    shortcuts.abrir_vetorfarma("VetorFarma.lnk")
+
+
 
 def copiar_para_clipboard():
     if not senha_capturada:
@@ -185,6 +189,7 @@ def _reaplicar_cor_botoes_principais():
         btn_capturar,
         btn_toggle,
         btn_atualizar,
+        btn_abrir_vetor,
         btn_copiar
     ]:
         btn.config(bg=PRIMARY, activebackground=PRIMARY)
@@ -379,7 +384,7 @@ janela = tk.Tk()
 janela.title("Gestão de Senha")
 janela.configure(bg=BG_COLOR)
 
-largura, altura = 340, 580
+largura, altura = 340, 640
 x = (janela.winfo_screenwidth() // 2) - (largura // 2)
 y = (janela.winfo_screenheight() // 2) - (altura // 2)
 janela.geometry(f"{largura}x{altura}+{x}+{y}")
@@ -392,9 +397,9 @@ card = tk.Frame(
     container,
     bg=CARD_COLOR,
     padx=20,
-    pady=15,
-    bd=1,
-    relief="solid"
+    pady=10,
+    bd=0,
+    relief="flat"
 )
 card.pack(padx=15, pady=15, fill="both", expand=True)
 
@@ -445,13 +450,13 @@ btn_cores.place(x=22, y=-6)
 lbl_usuario = tk.Label(card, text="E-mail", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
 lbl_usuario.grid(row=1, column=0, columnspan=2, pady=(2, 0))
 
-entry_usuario = tk.Entry(card, font=FONT_TEXT, width=28)
+entry_usuario = tk.Entry(card, font=FONT_TEXT, width=38)
 entry_usuario.grid(row=2, column=0, columnspan=2, pady=PAD_Y, padx=10)
 
 lbl_senha = tk.Label(card, text="Senha do App", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
 lbl_senha.grid(row=3, column=0, columnspan=2, pady=(5, 0))
 
-entry_senha = tk.Entry(card, show="*", font=FONT_TEXT, width=28)
+entry_senha = tk.Entry(card, show="*", font=FONT_TEXT, width=38)
 entry_senha.grid(row=4, column=0, columnspan=2, pady=PAD_Y, padx=10)
 
 
@@ -477,7 +482,8 @@ btn_capturar_token_fiserv = criar_botao("Buscar Token Fiserv", capturar_token_fi
 btn_capturar = criar_botao("Buscar Senha do Dia", capturar_senha, 7)
 btn_toggle = criar_botao("Ocultar Senha", toggle_senha_capturada, 8)
 btn_atualizar = criar_botao("Atualizar Atalho", atualizar_atalho, 9)
-btn_copiar = criar_botao("Copiar Senha", copiar_para_clipboard, 10)
+btn_abrir_vetor = criar_botao("Abrir VetorFarma", abrir_vetorfarma, 10)
+btn_copiar = criar_botao("Copiar Senha", copiar_para_clipboard, 11)
 
 lbl_senha_capturada = tk.Label(
     card,
@@ -486,7 +492,7 @@ lbl_senha_capturada = tk.Label(
     bg=CARD_COLOR,
     font=FONT_SUB
 )
-lbl_senha_capturada.grid(row=11, column=0, columnspan=2, pady=5)
+lbl_senha_capturada.grid(row=12, column=0, columnspan=2, pady=5)
 
 lbl_version = tk.Label(
     card,
@@ -495,13 +501,13 @@ lbl_version = tk.Label(
     fg=MUTED,
     font=FONT_SMALL
 )
-lbl_version.grid(row=12, column=0, columnspan=2, pady=(2, 0))
+lbl_version.grid(row=13, column=0, columnspan=2, pady=(2, 0))
 
 labels = [lbl_titulo, lbl_usuario, lbl_senha, lbl_senha_capturada, lbl_version]
 entries = [entry_usuario, entry_senha]
 botoes = [
     btn_capturar_token, btn_capturar_token_fiserv, btn_capturar,
-    btn_atualizar, btn_copiar, btn_toggle, btn_tema, btn_cores
+    btn_atualizar,btn_abrir_vetor, btn_copiar, btn_toggle, btn_tema, btn_cores
 ]
 
 # --- CARREGAR DADOS (1x só) ---
