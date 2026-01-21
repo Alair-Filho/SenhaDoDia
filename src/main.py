@@ -8,6 +8,7 @@ from src import file_manager, email_services, shortcuts, themes, sound
 
 CURRENT_VERSION = "v4.0.5"
 
+# variaveis globais
 senha_capturada = None
 tema_escuro = False
 
@@ -41,11 +42,26 @@ FONT_TEXT = ("Segoe UI", 9)
 FONT_SMALL = ("Segoe UI", 8)
 FONT_ICON = ("Segoe UI", 13)
 
-PAD_Y = 2
+PAD_Y = 2       # espacamento campo email e senha
 PAD_BTN_Y = 8   # espaço vertical entre botões
 PAD_BTN_X = 0   # se quiser espaço lateral extra
 
 
+# ==========================
+# Preferências de UI (visibilidade dos botões)
+# ==========================
+btn_visiveis = {
+    "getcard": True,
+    "fiserv": True,
+    "senha_dia": True,
+    "toggle": True,
+    "atualizar": True,
+    "abrir_farma": True,
+    "abrir_fiscal": True,
+    "copiar": True,
+}
+
+btn_grid_info = {}  # guarda o grid original de cada botão
 
 
 def ui(callable_):
@@ -59,14 +75,15 @@ def run_bg(task_fn):
 
 
 def salvar_dados(usuario, senha, ultima_senha=None):
-    # salva também o tema e as cores do claro/escuro
+    # salva também o tema, cores e preferências de UI
     file_manager.salvar_dados(
         usuario,
         senha,
         ultima_senha,
         tema_escuro,
         PRIMARY_LIGHT,
-        PRIMARY_DARK
+        PRIMARY_DARK,
+        btn_visiveis
     )
 
 
@@ -75,7 +92,6 @@ def carregar_dados():
 
 
 def atualizar_botao_tema(tema_escuro_local: bool):
-    # sem espaços no texto (alinha melhor em diferentes PCs)
     if tema_escuro_local:
         btn_tema.config(text="     ☀️", padx=6, pady=1)
     else:
@@ -141,9 +157,13 @@ def atualizar_atalho():
         ["VetorFarma.lnk", "VetorFiscal.lnk"]
     )
 
+
 def abrir_vetorfarma():
     shortcuts.abrir_vetorfarma("VetorFarma.lnk")
 
+
+def abrir_vetorfiscal():
+    shortcuts.abrir_vetorfarma("VetorFiscal.lnk")
 
 
 def copiar_para_clipboard():
@@ -189,6 +209,7 @@ def _reaplicar_cor_botoes_principais():
         btn_toggle,
         btn_atualizar,
         btn_abrir_vetor,
+        btn_abrir_vetorfiscal,
         btn_copiar
     ]:
         btn.config(bg=PRIMARY, activebackground=PRIMARY)
@@ -200,7 +221,7 @@ def aplicar_cor_app(nova_cor: str):
     - Se estiver no escuro: altera PRIMARY_DARK e aplica.
     - Sempre salva.
     """
-    global PRIMARY, PRIMARY_LIGHT, PRIMARY_DARK,LAST_LIGHT_COLOR
+    global PRIMARY, PRIMARY_LIGHT, PRIMARY_DARK, LAST_LIGHT_COLOR
 
     PRIMARY = nova_cor
     if tema_escuro:
@@ -251,7 +272,6 @@ def escolher_cor():
         )
         b.pack(pady=4)
 
-    # Centraliza o popup na janela
     popup.update_idletasks()
     w = popup.winfo_width()
     h = popup.winfo_height()
@@ -263,14 +283,53 @@ def escolher_cor():
     x = x_j + (w_j // 2) - (w // 2)
     y = y_j + (h_j // 2) - (h // 2)
 
-    # ajuste fino para esquerda (mude -20 conforme preferir)
     popup.geometry(f"+{x - 230}+{y}")
+
+
+def centralizar_modal(modal, parent):
+    modal.update_idletasks()
+
+    w = modal.winfo_width()
+    h = modal.winfo_height()
+
+    x_parent = parent.winfo_rootx()
+    y_parent = parent.winfo_rooty()
+    w_parent = parent.winfo_width()
+    h_parent = parent.winfo_height()
+
+    x = x_parent + (w_parent // 2) - (w // 2)
+    y = y_parent + (h_parent // 2) - (h // 2)
+
+    modal.geometry(f"+{x}+{y}")
+
+
+def ajustar_altura_janela():
+    janela.update_idletasks()
+
+    # mede o conteúdo REAL (card) e não o container
+    h_card = card.winfo_reqheight()
+
+    # folga para borda/título + paddings
+    margem_extra = 80
+
+    # ✅ permite encolher (altura mínima realista)
+    ALTURA_MINIMA = 420
+    ALTURA_MAXIMA = 640
+
+    nova_altura = h_card + margem_extra
+    nova_altura = max(ALTURA_MINIMA, nova_altura)
+    nova_altura = min(ALTURA_MAXIMA, nova_altura)
+
+    largura = janela.winfo_width() or 340
+    x = janela.winfo_x()
+    y = janela.winfo_y()
+
+    janela.geometry(f"{largura}x{nova_altura}+{x}+{y}")
 
 
 def alternar_tema_interface():
     global tema_escuro, PRIMARY, PRIMARY_LIGHT, PRIMARY_DARK, LAST_LIGHT_COLOR
 
-    # guarda a cor atual do claro antes de entrar no escuro
     if not tema_escuro:
         LAST_LIGHT_COLOR = PRIMARY_LIGHT
 
@@ -280,32 +339,25 @@ def alternar_tema_interface():
         tema_escuro
     )
 
-    if novo_tema:  # indo para escuro
+    if novo_tema:
         sound.tocar_som_tema_escuro_async()
-
-        # sempre começa o escuro com o padrão
         PRIMARY_DARK = DARK_DEFAULT
         PRIMARY = PRIMARY_DARK
-
-    else:  # indo para claro
+    else:
         sound.tocar_som_tema_claro_async()
 
-        # ✅ se o escuro foi customizado, herda
         if (PRIMARY_DARK or "").strip().lower() != DARK_DEFAULT.lower():
             PRIMARY_LIGHT = PRIMARY_DARK
         else:
-            # ✅ se não customizou no escuro, volta exatamente ao que era no claro
             PRIMARY_LIGHT = LAST_LIGHT_COLOR
 
         PRIMARY = PRIMARY_LIGHT
 
     tema_escuro = novo_tema
     atualizar_botao_tema(tema_escuro)
-
     _reaplicar_cor_botoes_principais()
 
     salvar_dados(entry_usuario.get().strip(), entry_senha.get().strip(), senha_capturada)
-
 
 
 def capturar_token_getcard():
@@ -378,12 +430,104 @@ def capturar_token_fiserv():
     run_bg(tarefa)
 
 
+def aplicar_visibilidade_botoes():
+    mapa = {
+        "getcard": btn_capturar_token,
+        "fiserv": btn_capturar_token_fiserv,
+        "senha_dia": btn_capturar,
+        "toggle": btn_toggle,
+        "atualizar": btn_atualizar,
+        "abrir_farma": btn_abrir_vetor,
+        "abrir_fiscal": btn_abrir_vetorfiscal,
+        "copiar": btn_copiar,
+    }
+
+    for chave, btn in mapa.items():
+        if btn_visiveis.get(chave, True):
+            info = btn_grid_info.get(btn)
+            if info:
+                btn.grid(**info)
+            else:
+                btn.grid()
+        else:
+            btn.grid_remove()
+
+    # ajusta altura depois que o grid recalcular
+    janela.after(50, ajustar_altura_janela)
+
+
+def abrir_configuracoes():
+    popup = tk.Toplevel(janela)
+    popup.title("Configurações")
+    popup.resizable(False, False)
+    popup.configure(bg=CARD_COLOR)
+
+    popup.transient(janela)
+    popup.grab_set()
+
+    tk.Label(
+        popup,
+        text="Escolha quais botões aparecem:",
+        bg=CARD_COLOR,
+        fg=TEXT_COLOR,
+        font=FONT_SUB
+    ).pack(padx=12, pady=(12, 8), anchor="w")
+
+    opcoes = [
+        ("Buscar Token GetCard", "getcard"),
+        ("Buscar Token Fiserv", "fiserv"),
+        ("Buscar Senha do Dia", "senha_dia"),
+        ("Ocultar/Mostrar Senha", "toggle"),
+        ("Atualizar Atalho", "atualizar"),
+        ("Abrir VetorFarma", "abrir_farma"),
+        ("Abrir VetorFiscal", "abrir_fiscal"),
+        ("Copiar Senha", "copiar"),
+    ]
+
+    vars_ = {}
+
+    def on_change(chave):
+        btn_visiveis[chave] = bool(vars_[chave].get())
+        aplicar_visibilidade_botoes()
+        salvar_dados(entry_usuario.get().strip(), entry_senha.get().strip(), senha_capturada)
+
+    for texto, chave in opcoes:
+        v = tk.BooleanVar(value=btn_visiveis.get(chave, True))
+        vars_[chave] = v
+
+        cb = tk.Checkbutton(
+            popup,
+            text=texto,
+            variable=v,
+            command=lambda c=chave: on_change(c),
+            bg=CARD_COLOR,
+            fg=TEXT_COLOR,
+            activebackground=CARD_COLOR,
+            activeforeground=TEXT_COLOR,
+            selectcolor=CARD_COLOR
+        )
+        cb.pack(padx=12, pady=4, anchor="w")
+
+    tk.Button(
+        popup,
+        text="Fechar",
+        command=popup.destroy,
+        bg=PRIMARY,
+        fg="white",
+        relief="flat",
+        cursor="hand2",
+        width=14
+    ).pack(padx=12, pady=(12, 12))
+
+    centralizar_modal(popup, janela)
+
+
 # --- JANELA ---
 janela = tk.Tk()
 janela.title("Gestão de Senha")
 janela.configure(bg=BG_COLOR)
 
-largura, altura = 340, 640
+largura, altura = 340, 680
 x = (janela.winfo_screenwidth() // 2) - (largura // 2)
 y = (janela.winfo_screenheight() // 2) - (altura // 2)
 janela.geometry(f"{largura}x{altura}+{x}+{y}")
@@ -425,7 +569,7 @@ btn_tema = tk.Button(
     highlightthickness=0,
     bd=0
 )
-btn_tema.place(x=-8, y=-8)
+btn_tema.place(x=-20, y=-8)
 
 btn_cores = tk.Button(
     card,
@@ -436,16 +580,36 @@ btn_cores = tk.Button(
     bg=CARD_COLOR,
     width=1,
     height=1,
-    padx=5,
-    pady=2,
+    padx=6,
+    pady=1,
     anchor="center",
     cursor="hand2",
     activebackground=CARD_COLOR,
     highlightthickness=0,
     bd=0
 )
-btn_cores.place(x=22, y=-8)
+btn_cores.place(x=10, y=-8)
 
+btn_config = tk.Button(
+    card,
+    text="⚙",
+    command=abrir_configuracoes,
+    relief="flat",
+    font=("Segoe UI Symbol", 12),
+    bg=CARD_COLOR,
+    width=1,
+    height=1,
+    padx=6,
+    pady=1,
+    cursor="hand2",
+    activebackground=CARD_COLOR,
+    highlightthickness=0,
+    bd=0
+)
+btn_config.place(relx=1.0, x=-8, y=-8, anchor="ne")
+
+
+# label de E-mail e senha
 lbl_usuario = tk.Label(card, text="E-mail", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
 lbl_usuario.grid(row=1, column=0, columnspan=2, pady=(2, 0))
 
@@ -471,18 +635,27 @@ def criar_botao(texto, comando, linha):
         cursor="hand2",
         width=28
     )
-    b.grid(row=linha, column=0, columnspan=2, pady=(0,PAD_BTN_Y),padx=PAD_BTN_X)
+    b.grid(row=linha, column=0, columnspan=2, pady=(0, PAD_BTN_Y), padx=PAD_BTN_X)
     return b
 
 
 btn_capturar_token = criar_botao("Buscar Token GetCard", capturar_token_getcard, 5)
 btn_capturar_token.grid_configure(pady=(15, PAD_BTN_Y))
+
 btn_capturar_token_fiserv = criar_botao("Buscar Token Fiserv", capturar_token_fiserv, 6)
 btn_capturar = criar_botao("Buscar Senha do Dia", capturar_senha, 7)
 btn_toggle = criar_botao("Ocultar Senha", toggle_senha_capturada, 8)
 btn_atualizar = criar_botao("Atualizar Atalho", atualizar_atalho, 9)
 btn_abrir_vetor = criar_botao("Abrir VetorFarma", abrir_vetorfarma, 10)
-btn_copiar = criar_botao("Copiar Senha", copiar_para_clipboard, 11)
+btn_abrir_vetorfiscal = criar_botao("Abrir VetorFiscal", abrir_vetorfiscal, 11)
+btn_copiar = criar_botao("Copiar Senha", copiar_para_clipboard, 12)
+
+# guarda grid original (pra poder esconder/mostrar sem bagunçar layout)
+for b in [
+    btn_capturar_token, btn_capturar_token_fiserv, btn_capturar, btn_toggle,
+    btn_atualizar, btn_abrir_vetor, btn_abrir_vetorfiscal, btn_copiar
+]:
+    btn_grid_info[b] = b.grid_info()
 
 lbl_senha_capturada = tk.Label(
     card,
@@ -491,7 +664,7 @@ lbl_senha_capturada = tk.Label(
     bg=CARD_COLOR,
     font=FONT_SUB
 )
-lbl_senha_capturada.grid(row=12, column=0, columnspan=2, pady=5)
+lbl_senha_capturada.grid(row=13, column=0, columnspan=2, pady=5)
 
 lbl_version = tk.Label(
     card,
@@ -500,17 +673,18 @@ lbl_version = tk.Label(
     fg=MUTED,
     font=FONT_SMALL
 )
-lbl_version.grid(row=13, column=0, columnspan=2, pady=(2, 0))
+lbl_version.grid(row=14, column=0, columnspan=2, pady=(2, 0))
 
 labels = [lbl_titulo, lbl_usuario, lbl_senha, lbl_senha_capturada, lbl_version]
 entries = [entry_usuario, entry_senha]
 botoes = [
     btn_capturar_token, btn_capturar_token_fiserv, btn_capturar,
-    btn_atualizar,btn_abrir_vetor, btn_copiar, btn_toggle, btn_tema, btn_cores
+    btn_atualizar, btn_abrir_vetor, btn_abrir_vetorfiscal, btn_copiar,
+    btn_toggle, btn_tema, btn_cores, btn_config
 ]
 
 # --- CARREGAR DADOS (1x só) ---
-usuario_salvo, senha_salva, ultima_senha, tema_salvo, primary_light_salvo, primary_dark_salvo = carregar_dados()
+usuario_salvo, senha_salva, ultima_senha, tema_salvo, primary_light_salvo, primary_dark_salvo, ui_prefs_salvo = carregar_dados()
 
 if usuario_salvo:
     entry_usuario.insert(0, usuario_salvo)
@@ -529,6 +703,10 @@ if primary_light_salvo:
 if primary_dark_salvo:
     PRIMARY_DARK = primary_dark_salvo
 
+# restaura preferências de UI (visibilidade)
+if isinstance(ui_prefs_salvo, dict):
+    btn_visiveis.update(ui_prefs_salvo)
+
 # aplica tema salvo
 tema_escuro = bool(tema_salvo)
 themes.aplicar_tema(janela, container, card, labels, entries, botoes, tema_escuro)
@@ -539,5 +717,11 @@ PRIMARY = PRIMARY_DARK if tema_escuro else PRIMARY_LIGHT
 # reaplica cor nos botões principais
 _reaplicar_cor_botoes_principais()
 atualizar_botao_tema(tema_escuro)
+
+# aplica visibilidade escolhida
+aplicar_visibilidade_botoes()
+
+# ajusta após o primeiro desenho completo
+janela.after(200, ajustar_altura_janela)
 
 janela.mainloop()

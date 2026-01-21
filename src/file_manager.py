@@ -1,4 +1,5 @@
 import os
+import json
 from cryptography.fernet import Fernet
 from tkinter import messagebox
 
@@ -65,19 +66,29 @@ def salvar_dados(
     tema_escuro: bool = False,
     primary_light: str | None = None,
     primary_dark: str | None = None,
+    ui_prefs: dict | None = None,
 ):
     """
-    Formato (6 linhas):
+    Formato (7 linhas):
     0 usuario
     1 senha
     2 ultima_senha
     3 tema_escuro (1/0)
     4 primary_light (#RRGGBB)
     5 primary_dark (#RRGGBB)
+    6 ui_prefs (JSON)
     """
     try:
         fernet = _get_fernet()
         tema_val = "1" if tema_escuro else "0"
+
+        ui_json = ""
+        if ui_prefs is not None:
+            try:
+                ui_json = json.dumps(ui_prefs, ensure_ascii=False)
+            except Exception:
+                ui_json = ""
+
         dados = "\n".join([
             usuario or "",
             senha or "",
@@ -85,6 +96,7 @@ def salvar_dados(
             tema_val,
             primary_light or "",
             primary_dark or "",
+            ui_json,
         ])
         cript = fernet.encrypt(dados.encode("utf-8"))
         with open(DADOS_PATH, "wb") as f:
@@ -95,14 +107,15 @@ def salvar_dados(
 
 def carregar_dados():
     """
-    Retorna sempre 6 valores:
-    (usuario, senha, ultima_senha, tema_escuro_bool, primary_light, primary_dark)
-    Mantém compatibilidade com arquivos antigos (3 ou 4 linhas).
+    Retorna sempre 7 valores:
+    (usuario, senha, ultima_senha, tema_escuro_bool, primary_light, primary_dark, ui_prefs_dict)
+
+    Mantém compatibilidade com arquivos antigos (3, 4, 6 linhas).
     """
     try:
         fernet = _get_fernet()
         if not os.path.exists(DADOS_PATH):
-            return None, None, None, False, None, None
+            return None, None, None, False, None, None, None
 
         with open(DADOS_PATH, "rb") as f:
             cript = f.read()
@@ -120,7 +133,16 @@ def carregar_dados():
         primary_light = (linhas[4].strip() if len(linhas) > 4 else None) or None
         primary_dark = (linhas[5].strip() if len(linhas) > 5 else None) or None
 
-        return usuario, senha, ultima, tema_escuro, primary_light, primary_dark
+        ui_prefs = None
+        if len(linhas) > 6:
+            raw = (linhas[6] or "").strip()
+            if raw:
+                try:
+                    ui_prefs = json.loads(raw)
+                except Exception:
+                    ui_prefs = None
+
+        return usuario, senha, ultima, tema_escuro, primary_light, primary_dark, ui_prefs
     except Exception as e:
         messagebox.showerror("Erro", f"Erro ao carregar os dados: {e}")
-        return None, None, None, False, None, None
+        return None, None, None, False, None, None, None
