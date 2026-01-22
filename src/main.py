@@ -28,7 +28,7 @@ PAD_BTN_X = 0   # se quiser espaço lateral extra
 # Paleta (cor principal do app)
 # ==========================
 PALETAS = {
-    "Roxo": "#4f46e5",
+    "Roxo": "#A020F0",
     "Azul": "#2563eb",
     "Vermelho": "#9B111E",
     "Verde": "#16a34a",
