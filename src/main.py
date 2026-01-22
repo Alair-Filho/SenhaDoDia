@@ -623,7 +623,7 @@ lbl_senha = tk.Label(card, text="Senha do App", bg=CARD_COLOR, fg=MUTED, font=FO
 lbl_senha.grid(row=3, column=0, columnspan=2, pady=(5, 0))
 
 entry_senha = tk.Entry(card, show="*", font=FONT_TEXT, width=38)
-entry_senha.grid(row=4, column=0, columnspan=2, pady=PAD_Y, padx=10)
+entry_senha.grid(row=4, column=0, columnspan=2, pady=(PAD_Y,25), padx=10)
 
 
 def criar_botao(texto, comando, linha):
@@ -643,7 +643,7 @@ def criar_botao(texto, comando, linha):
 
 
 btn_capturar_token = criar_botao("Buscar Token GetCard", capturar_token_getcard, 5)
-btn_capturar_token.grid_configure(pady=(15, PAD_BTN_Y))
+
 
 btn_capturar_token_fiserv = criar_botao("Buscar Token Fiserv", capturar_token_fiserv, 6)
 btn_capturar = criar_botao("Buscar Senha do Dia", capturar_senha, 7)
