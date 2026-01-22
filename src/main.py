@@ -210,7 +210,10 @@ def _reaplicar_cor_botoes_principais():
         btn_atualizar,
         btn_abrir_vetor,
         btn_abrir_vetorfiscal,
-        btn_copiar
+        btn_copiar,
+        btn_tema,
+        btn_cores,
+        btn_config
     ]:
         btn.config(bg=PRIMARY, activebackground=PRIMARY)
 
@@ -606,7 +609,7 @@ btn_config = tk.Button(
     highlightthickness=0,
     bd=0
 )
-btn_config.place(relx=1.0, x=-8, y=-8, anchor="ne")
+btn_config.place(relx=1.0, x=20, y=-8, anchor="ne")
 
 
 # label de E-mail e senha
