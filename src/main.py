@@ -675,7 +675,7 @@ lbl_senha_capturada.grid(row=13, column=0, columnspan=2, pady=5)
 
 lbl_version = tk.Label(
     card,
-    text=f"Versão {CURRENT_VERSION} - Áyron.ZettiTech | Alair Filho",
+    text=f"by Áyron Silva & Alair Filhos - {CURRENT_VERSION}",
     bg=_initial_theme["bg_card"],
     fg=_initial_theme["muted"],
     font=FONT_SMALL
