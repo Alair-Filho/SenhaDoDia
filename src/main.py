@@ -1,3 +1,4 @@
+# src/main.py
 import tkinter as tk
 from tkinter import messagebox
 import threading
@@ -12,15 +13,20 @@ CURRENT_VERSION = "v4.0.5"
 senha_capturada = None
 tema_escuro = False
 
-# --- ESTILO ---
-BG_COLOR = "#f4f6f8"
-CARD_COLOR = "#ffffff"
-TEXT_COLOR = "#111827"
-MUTED = "#6b7280"
-SUCCESS = "#16a34a"
+# --- FONTES / LAYOUT ---
+FONT_TITLE = ("Segoe UI", 13, "bold")
+FONT_SUB = ("Segoe UI", 10, "bold")
+FONT_TEXT = ("Segoe UI", 9)
+FONT_SMALL = ("Segoe UI", 8)
+FONT_ICON = ("Segoe UI", 13)
 
-DARK_DEFAULT = "#3f3f3f"  # cor padrão de botões no modo escuro
+PAD_Y = 2       # espacamento campo email e senha
+PAD_BTN_Y = 8   # espaço vertical entre botões
+PAD_BTN_X = 0   # se quiser espaço lateral extra
 
+# ==========================
+# Paleta (cor principal do app)
+# ==========================
 PALETAS = {
     "Roxo": "#4f46e5",
     "Azul": "#2563eb",
@@ -32,20 +38,9 @@ PALETAS = {
 }
 
 PRIMARY_LIGHT = PALETAS["Roxo"]   # cor do modo claro (persistente)
-PRIMARY_DARK = DARK_DEFAULT       # cor do modo escuro (por regra começa no padrão)
+PRIMARY_DARK = themes.get_theme(True)["btn_bg"]  # cor padrão do modo escuro (vem do tema)
 PRIMARY = PRIMARY_LIGHT           # cor atual usada nos botões principais
 LAST_LIGHT_COLOR = PRIMARY_LIGHT
-
-FONT_TITLE = ("Segoe UI", 13, "bold")
-FONT_SUB = ("Segoe UI", 10, "bold")
-FONT_TEXT = ("Segoe UI", 9)
-FONT_SMALL = ("Segoe UI", 8)
-FONT_ICON = ("Segoe UI", 13)
-
-PAD_Y = 2       # espacamento campo email e senha
-PAD_BTN_Y = 8   # espaço vertical entre botões
-PAD_BTN_X = 0   # se quiser espaço lateral extra
-
 
 # ==========================
 # Preferências de UI (visibilidade dos botões)
@@ -238,10 +233,12 @@ def aplicar_cor_app(nova_cor: str):
 
 
 def escolher_cor():
+    theme = themes.get_theme(tema_escuro)
+
     popup = tk.Toplevel(janela)
     popup.title("Escolher cor")
     popup.resizable(False, False)
-    popup.configure(bg=CARD_COLOR)
+    popup.configure(bg=theme["bg_card"])
 
     popup.transient(janela)
     popup.grab_set()
@@ -249,12 +246,12 @@ def escolher_cor():
     tk.Label(
         popup,
         text="Selecione uma cor:",
-        bg=CARD_COLOR,
-        fg=TEXT_COLOR,
+        bg=theme["bg_card"],
+        fg=theme["text"],
         font=FONT_SUB
     ).pack(padx=12, pady=(12, 8))
 
-    frame = tk.Frame(popup, bg=CARD_COLOR)
+    frame = tk.Frame(popup, bg=theme["bg_card"])
     frame.pack(padx=12, pady=(0, 12))
 
     for nome, cor in PALETAS.items():
@@ -336,20 +333,24 @@ def alternar_tema_interface():
     if not tema_escuro:
         LAST_LIGHT_COLOR = PRIMARY_LIGHT
 
+    # alterna e já aplica o tema novo
     novo_tema = themes.alternar_tema(
         janela, container, card,
         labels, entries, botoes,
         tema_escuro
     )
 
+    # Ajusta a cor principal conforme o tema (sua regra de negócio)
+    dark_default = themes.get_theme(True)["btn_bg"]
+
     if novo_tema:
         sound.tocar_som_tema_escuro_async()
-        PRIMARY_DARK = DARK_DEFAULT
+        PRIMARY_DARK = dark_default
         PRIMARY = PRIMARY_DARK
     else:
         sound.tocar_som_tema_claro_async()
 
-        if (PRIMARY_DARK or "").strip().lower() != DARK_DEFAULT.lower():
+        if (PRIMARY_DARK or "").strip().lower() != dark_default.lower():
             PRIMARY_LIGHT = PRIMARY_DARK
         else:
             PRIMARY_LIGHT = LAST_LIGHT_COLOR
@@ -460,10 +461,12 @@ def aplicar_visibilidade_botoes():
 
 
 def abrir_configuracoes():
+    theme = themes.get_theme(tema_escuro)
+
     popup = tk.Toplevel(janela)
     popup.title("Configurações")
     popup.resizable(False, False)
-    popup.configure(bg=CARD_COLOR)
+    popup.configure(bg=theme["bg_card"])
 
     popup.transient(janela)
     popup.grab_set()
@@ -471,8 +474,8 @@ def abrir_configuracoes():
     tk.Label(
         popup,
         text="Escolha quais botões aparecem:",
-        bg=CARD_COLOR,
-        fg=TEXT_COLOR,
+        bg=theme["bg_card"],
+        fg=theme["text"],
         font=FONT_SUB
     ).pack(padx=12, pady=(12, 8), anchor="w")
 
@@ -503,11 +506,11 @@ def abrir_configuracoes():
             text=texto,
             variable=v,
             command=lambda c=chave: on_change(c),
-            bg=CARD_COLOR,
-            fg=TEXT_COLOR,
-            activebackground=CARD_COLOR,
-            activeforeground=TEXT_COLOR,
-            selectcolor=CARD_COLOR
+            bg=theme["bg_card"],
+            fg=theme["text"],
+            activebackground=theme["bg_card"],
+            activeforeground=theme["text"],
+            selectcolor=theme["bg_card"]
         )
         cb.pack(padx=12, pady=4, anchor="w")
 
@@ -526,9 +529,12 @@ def abrir_configuracoes():
 
 
 # --- JANELA ---
+# tema inicial (antes de criar os widgets)
+_initial_theme = themes.get_theme(False)
+
 janela = tk.Tk()
 janela.title("Gestão de Senha")
-janela.configure(bg=BG_COLOR)
+janela.configure(bg=_initial_theme["bg_janela"])
 
 largura, altura = 340, 680
 x = (janela.winfo_screenwidth() // 2) - (largura // 2)
@@ -536,12 +542,12 @@ y = (janela.winfo_screenheight() // 2) - (altura // 2)
 janela.geometry(f"{largura}x{altura}+{x}+{y}")
 janela.resizable(False, False)
 
-container = tk.Frame(janela, bg=BG_COLOR)
+container = tk.Frame(janela, bg=_initial_theme["bg_janela"])
 container.pack(fill="both", expand=True)
 
 card = tk.Frame(
     container,
-    bg=CARD_COLOR,
+    bg=_initial_theme["bg_card"],
     padx=20,
     pady=10,
     bd=0,
@@ -552,7 +558,7 @@ card.pack(padx=15, pady=15, fill="both", expand=True)
 card.grid_columnconfigure(0, weight=1)
 card.grid_columnconfigure(1, weight=1)
 
-lbl_titulo = tk.Label(card, text="Gestão de Senha", font=FONT_TITLE, bg=CARD_COLOR, fg=TEXT_COLOR)
+lbl_titulo = tk.Label(card, text="Gestão de Senha", font=FONT_TITLE, bg=_initial_theme["bg_card"], fg=_initial_theme["text"])
 lbl_titulo.grid(row=0, column=0, columnspan=2, pady=(0, 10))
 
 btn_tema = tk.Button(
@@ -561,14 +567,14 @@ btn_tema = tk.Button(
     command=alternar_tema_interface,
     relief="flat",
     font=("Segoe UI Symbol", 12),
-    bg=CARD_COLOR,
+    bg=_initial_theme["bg_card"],
     width=1,
     height=1,
     padx=10,
     pady=10,
     anchor="center",
     cursor="hand2",
-    activebackground=CARD_COLOR,
+    activebackground=_initial_theme["bg_card"],
     highlightthickness=0,
     bd=0
 )
@@ -580,14 +586,14 @@ btn_cores = tk.Button(
     command=escolher_cor,
     relief="flat",
     font=("Segoe UI Symbol", 12),
-    bg=CARD_COLOR,
+    bg=_initial_theme["bg_card"],
     width=1,
     height=1,
     padx=6,
     pady=1,
     anchor="center",
     cursor="hand2",
-    activebackground=CARD_COLOR,
+    activebackground=_initial_theme["bg_card"],
     highlightthickness=0,
     bd=0
 )
@@ -599,13 +605,13 @@ btn_config = tk.Button(
     command=abrir_configuracoes,
     relief="flat",
     font=("Segoe UI Symbol", 12),
-    bg=CARD_COLOR,
+    bg=_initial_theme["bg_card"],
     width=1,
     height=1,
     padx=6,
     pady=1,
     cursor="hand2",
-    activebackground=CARD_COLOR,
+    activebackground=_initial_theme["bg_card"],
     highlightthickness=0,
     bd=0
 )
@@ -613,17 +619,17 @@ btn_config.place(relx=1.0, x=20, y=-8, anchor="ne")
 
 
 # label de E-mail e senha
-lbl_usuario = tk.Label(card, text="E-mail", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
+lbl_usuario = tk.Label(card, text="E-mail", bg=_initial_theme["bg_card"], fg=_initial_theme["muted"], font=FONT_TEXT)
 lbl_usuario.grid(row=1, column=0, columnspan=2, pady=(2, 0))
 
 entry_usuario = tk.Entry(card, font=FONT_TEXT, width=38)
 entry_usuario.grid(row=2, column=0, columnspan=2, pady=PAD_Y, padx=10)
 
-lbl_senha = tk.Label(card, text="Senha do App", bg=CARD_COLOR, fg=MUTED, font=FONT_TEXT)
+lbl_senha = tk.Label(card, text="Senha do App", bg=_initial_theme["bg_card"], fg=_initial_theme["muted"], font=FONT_TEXT)
 lbl_senha.grid(row=3, column=0, columnspan=2, pady=(5, 0))
 
 entry_senha = tk.Entry(card, show="*", font=FONT_TEXT, width=38)
-entry_senha.grid(row=4, column=0, columnspan=2, pady=(PAD_Y,25), padx=10)
+entry_senha.grid(row=4, column=0, columnspan=2, pady=(PAD_Y, 25), padx=10)
 
 
 def criar_botao(texto, comando, linha):
@@ -643,8 +649,6 @@ def criar_botao(texto, comando, linha):
 
 
 btn_capturar_token = criar_botao("Buscar Token GetCard", capturar_token_getcard, 5)
-
-
 btn_capturar_token_fiserv = criar_botao("Buscar Token Fiserv", capturar_token_fiserv, 6)
 btn_capturar = criar_botao("Buscar Senha do Dia", capturar_senha, 7)
 btn_toggle = criar_botao("Ocultar Senha", toggle_senha_capturada, 8)
@@ -663,8 +667,8 @@ for b in [
 lbl_senha_capturada = tk.Label(
     card,
     text="Senha Capturada: Nenhuma",
-    fg=SUCCESS,
-    bg=CARD_COLOR,
+    fg=_initial_theme["success"],
+    bg=_initial_theme["bg_card"],
     font=FONT_SUB
 )
 lbl_senha_capturada.grid(row=13, column=0, columnspan=2, pady=5)
@@ -672,8 +676,8 @@ lbl_senha_capturada.grid(row=13, column=0, columnspan=2, pady=5)
 lbl_version = tk.Label(
     card,
     text=f"Versão {CURRENT_VERSION} - Áyron.ZettiTech | Alair Filho",
-    bg=CARD_COLOR,
-    fg=MUTED,
+    bg=_initial_theme["bg_card"],
+    fg=_initial_theme["muted"],
     font=FONT_SMALL
 )
 lbl_version.grid(row=14, column=0, columnspan=2, pady=(2, 0))
@@ -712,7 +716,7 @@ if isinstance(ui_prefs_salvo, dict):
 
 # aplica tema salvo
 tema_escuro = bool(tema_salvo)
-themes.aplicar_tema(janela, container, card, labels, entries, botoes, tema_escuro)
+themes.aplicar_tema(janela, container, card, labels, entries, botoes, themes.get_theme(tema_escuro))
 
 # escolhe PRIMARY correto conforme tema inicial
 PRIMARY = PRIMARY_DARK if tema_escuro else PRIMARY_LIGHT
