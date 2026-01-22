@@ -310,7 +310,7 @@ def ajustar_altura_janela():
     h_card = card.winfo_reqheight()
 
     # folga para borda/título + paddings
-    margem_extra = 80
+    margem_extra = 30
 
     # ✅ permite encolher (altura mínima realista)
     ALTURA_MINIMA = 420
@@ -454,7 +454,7 @@ def aplicar_visibilidade_botoes():
             else:
                 btn.grid()
         else:
-            btn.grid_remove()
+            btn.grid_forget()
 
     # ajusta altura depois que o grid recalcular
     janela.after(50, ajustar_altura_janela)
@@ -557,7 +557,8 @@ card.pack(padx=15, pady=15, fill="both", expand=True)
 
 card.grid_columnconfigure(0, weight=1)
 card.grid_columnconfigure(1, weight=1)
-
+for i in range(20):
+    card.grid_rowconfigure(i, weight=0)
 lbl_titulo = tk.Label(card, text="Gestão de Senha", font=FONT_TITLE, bg=_initial_theme["bg_card"], fg=_initial_theme["text"])
 lbl_titulo.grid(row=0, column=0, columnspan=2, pady=(0, 10))
 
@@ -675,7 +676,7 @@ lbl_senha_capturada.grid(row=13, column=0, columnspan=2, pady=5)
 
 lbl_version = tk.Label(
     card,
-    text=f"by Áyron Silva & Alair Filhos - {CURRENT_VERSION}",
+    text=f"by Áyron Silva & Alair Filho - {CURRENT_VERSION}",
     bg=_initial_theme["bg_card"],
     fg=_initial_theme["muted"],
     font=FONT_SMALL
