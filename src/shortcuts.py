@@ -58,12 +58,47 @@ def modificar_atalhos(senha: str, nomes_atalhos: list[str]) -> None:
             messagebox.showerror("Erro", f"Falha ao atualizar '{nome}': {e}")
             return
 
-    if atualizados and nao_encontrados:
-        messagebox.showwarning(
+    if atualizados and nao_encontrados or nao_encontrados:
+        resp = messagebox.askyesno(
             "Atualização parcial",
             "Atualizei:\n- " + "\n- ".join(atualizados) +
-            "\n\nNão encontrei:\n- " + "\n- ".join(nao_encontrados)
+            "\n\nNão encontrei:\n- " + "\n- ".join(nao_encontrados) +
+            "\n\nDeseja criar os atalhos faltantes apontando para os executáveis do Vetor?"
         )
+        if resp:
+            shell = win32com.client.Dispatch("WScript.Shell")
+            criados = []
+            falhas = []
+            desktops = _desktop_paths()
+            destino_dir = desktops[0] if desktops else os.path.join(os.path.expanduser("~"), "Desktop")
+
+            # tenta usar a variável de ambiente correta para Program Files (x86)
+            program_files_x86 = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles") or r"C:\Program Files (x86)"
+            vetor_dir = os.path.join(program_files_x86, "Vetor")
+
+            for nome in nao_encontrados:
+                caminho_novo = os.path.join(destino_dir, nome)
+                try:
+                    # determina o executável alvo conforme o nome do atalho
+                    lower_nome = nome.lower()
+                    if "vetorfarma" in lower_nome:
+                        target_exe = os.path.join(vetor_dir, "VetorFarma.exe")
+                    elif "vetorfiscal" in lower_nome:
+                        target_exe = os.path.join(vetor_dir, "VetorFiscal.exe")
+                    else:
+                        target_exe = vetor_dir  # fallback para a pasta se não for possível mapear
+
+                    sc = shell.CreateShortcut(caminho_novo)
+                    sc.TargetPath = target_exe
+                    sc.WorkingDirectory = vetor_dir
+                    sc.Save()
+                    criados.append(nome)
+                except Exception as e:
+                    falhas.append(f"{nome}: {e}")
+            if criados:
+                messagebox.showinfo("Atalhos criados", "Criei:\n- " + "\n- ".join(criados))
+            if falhas:
+                messagebox.showerror("Falha ao criar", "Falhas:\n- " + "\n- ".join(falhas))
         return
 
     if atualizados:
