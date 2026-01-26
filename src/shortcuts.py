@@ -91,6 +91,8 @@ def modificar_atalhos(senha: str, nomes_atalhos: list[str]) -> None:
                     sc = shell.CreateShortcut(caminho_novo)
                     sc.TargetPath = target_exe
                     sc.WorkingDirectory = vetor_dir
+                    # adiciona a senha salva como argumento no atalho
+                    sc.Arguments = senha
                     sc.Save()
                     criados.append(nome)
                 except Exception as e:
