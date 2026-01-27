@@ -1,6 +1,6 @@
 # src/main.py
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, colorchooser
 import threading
 import pyperclip
 
@@ -12,6 +12,9 @@ CURRENT_VERSION = "v4.0.5"
 # variaveis globais
 senha_capturada = None
 tema_escuro = False
+fonte_branca = False
+
+
 
 # --- FONTES / LAYOUT ---
 FONT_TITLE = ("Segoe UI", 13, "bold")
@@ -78,7 +81,8 @@ def salvar_dados(usuario, senha, ultima_senha=None):
         tema_escuro,
         PRIMARY_LIGHT,
         PRIMARY_DARK,
-        btn_visiveis
+        btn_visiveis,
+        fonte_branca
     )
 
 
@@ -208,9 +212,37 @@ def _reaplicar_cor_botoes_principais():
         btn_copiar,
         btn_tema,
         btn_cores,
+        btn_fonte,
         btn_config
     ]:
         btn.config(bg=PRIMARY, activebackground=PRIMARY)
+        
+    _reaplicar_fonte_componentes()
+
+
+def _reaplicar_fonte_componentes():
+    """
+    Muda SOMENTE a cor do TEXTO/ÍCONE dos componentes que usam o PRIMARY (roxo).
+    Não mexe em labels nem entries.
+    """
+    fg = "#ffffff" if fonte_branca else "#111827"
+
+    for btn in [
+        btn_capturar_token,
+        btn_capturar_token_fiserv,
+        btn_capturar,
+        btn_toggle,
+        btn_atualizar,
+        btn_abrir_vetor,
+        btn_abrir_vetorfiscal,
+        btn_copiar,
+        btn_tema,
+        btn_cores,
+        btn_config,
+        btn_fonte
+    ]:
+        btn.config(fg=fg, activeforeground=fg)
+
 
 
 def aplicar_cor_app(nova_cor: str):
@@ -233,57 +265,22 @@ def aplicar_cor_app(nova_cor: str):
 
 
 def escolher_cor():
-    theme = themes.get_theme(tema_escuro)
+    _rgb, cor_hex = colorchooser.askcolor(
+        title="Escolha a cor principal",
+        parent=janela,
+        color=PRIMARY_DARK
+    )
+    if cor_hex:
+        aplicar_cor_app(cor_hex)
 
-    popup = tk.Toplevel(janela)
-    popup.title("Escolher cor")
-    popup.resizable(False, False)
-    popup.configure(bg=theme["bg_card"])
+def alternar_cor_fonte():
+    global fonte_branca
+    fonte_branca = not fonte_branca
 
-    popup.transient(janela)
-    popup.grab_set()
+    _reaplicar_fonte_componentes()
 
-    tk.Label(
-        popup,
-        text="Selecione uma cor:",
-        bg=theme["bg_card"],
-        fg=theme["text"],
-        font=FONT_SUB
-    ).pack(padx=12, pady=(12, 8))
+    salvar_dados(entry_usuario.get().strip(), entry_senha.get().strip(), senha_capturada)
 
-    frame = tk.Frame(popup, bg=theme["bg_card"])
-    frame.pack(padx=12, pady=(0, 12))
-
-    for nome, cor in PALETAS.items():
-        def on_click(c=cor):
-            aplicar_cor_app(c)
-            popup.destroy()
-
-        b = tk.Button(
-            frame,
-            text=nome,
-            command=on_click,
-            bg=cor,
-            fg="white",
-            relief="flat",
-            width=16,
-            height=1,
-            cursor="hand2"
-        )
-        b.pack(pady=4)
-
-    popup.update_idletasks()
-    w = popup.winfo_width()
-    h = popup.winfo_height()
-    x_j = janela.winfo_rootx()
-    y_j = janela.winfo_rooty()
-    w_j = janela.winfo_width()
-    h_j = janela.winfo_height()
-
-    x = x_j + (w_j // 2) - (w // 2)
-    y = y_j + (h_j // 2) - (h // 2)
-
-    popup.geometry(f"+{x - 230}+{y}")
 
 
 def centralizar_modal(modal, parent):
@@ -600,6 +597,25 @@ btn_cores = tk.Button(
 )
 btn_cores.place(x=10, y=-8)
 
+btn_fonte = tk.Button(
+    card,
+    text="     🅰️",
+    command=alternar_cor_fonte,
+    relief="flat",
+    font=("Segoe UI Symbol", 11),
+    bg=_initial_theme["bg_card"],
+    width=1,
+    height=1,
+    padx=6,
+    pady=1,
+    cursor="hand2",
+    activebackground=_initial_theme["bg_card"],
+    highlightthickness=0,
+    bd=0
+)
+btn_fonte.place(x=40, y=-8)  # ajuste o x se quiser mais perto/longe
+
+
 btn_config = tk.Button(
     card,
     text="⚙",
@@ -688,11 +704,15 @@ entries = [entry_usuario, entry_senha]
 botoes = [
     btn_capturar_token, btn_capturar_token_fiserv, btn_capturar,
     btn_atualizar, btn_abrir_vetor, btn_abrir_vetorfiscal, btn_copiar,
-    btn_toggle, btn_tema, btn_cores, btn_config
+    btn_toggle, btn_tema, btn_cores, btn_fonte, btn_config
 ]
 
 # --- CARREGAR DADOS (1x só) ---
-usuario_salvo, senha_salva, ultima_senha, tema_salvo, primary_light_salvo, primary_dark_salvo, ui_prefs_salvo = carregar_dados()
+usuario_salvo, senha_salva, ultima_senha, tema_salvo, primary_light_salvo, primary_dark_salvo ,ui_prefs_salvo,fonte_branca_salva= carregar_dados()
+
+if fonte_branca_salva is not None:
+    fonte_branca = bool(fonte_branca_salva)
+
 
 if usuario_salvo:
     entry_usuario.insert(0, usuario_salvo)
