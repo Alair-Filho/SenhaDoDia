@@ -90,3 +90,41 @@ def alternar_tema(janela, container, card, widgets, entries, botoes, tema_escuro
     novo_tema_escuro = not tema_escuro
     aplicar_tema(janela, container, card, widgets, entries, botoes, get_theme(novo_tema_escuro))
     return novo_tema_escuro
+
+def get_text_color(tema_escuro: bool, fonte_branca: bool) -> str:
+    """
+    Decide a cor do texto principal.
+    """
+    if fonte_branca:
+        return "#ffffff"
+    return "#111827" if not tema_escuro else get_theme(True)["text"]
+
+
+def aplicar_preferencia_fonte(widgets, entries, tema_escuro: bool, fonte_branca: bool, theme: dict):
+    """
+    Aplica APENAS a cor do texto (labels e entries),
+    sem alterar fundo ou botões.
+    """
+    bg_card = theme["bg_card"]
+    fg_muted = theme["muted"]
+    fg_success = theme["success"]
+
+    fg_texto = get_text_color(tema_escuro, fonte_branca)
+
+    # Labels
+    for lbl in widgets:
+        texto = lbl.cget("text") or ""
+
+        if "Senha Capturada" in texto:
+            lbl.configure(bg=bg_card, fg=fg_success)
+        elif "by " in texto or "Versão" in texto:
+            lbl.configure(bg=bg_card, fg=fg_muted)
+        else:
+            lbl.configure(bg=bg_card, fg=fg_texto)
+
+    # Entries
+    for entry in entries:
+        entry.configure(
+            fg=fg_texto,
+            insertbackground=fg_texto
+        )

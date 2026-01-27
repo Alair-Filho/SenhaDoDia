@@ -67,9 +67,10 @@ def salvar_dados(
     primary_light: str | None = None,
     primary_dark: str | None = None,
     ui_prefs: dict | None = None,
+    fonte_branca: bool = False,
 ):
     """
-    Formato (7 linhas):
+    Formato (8 linhas):
     0 usuario
     1 senha
     2 ultima_senha
@@ -77,10 +78,12 @@ def salvar_dados(
     4 primary_light (#RRGGBB)
     5 primary_dark (#RRGGBB)
     6 ui_prefs (JSON)
+    7 fonte_branca (1/0)
     """
     try:
         fernet = _get_fernet()
         tema_val = "1" if tema_escuro else "0"
+        fonte_val = "1" if fonte_branca else "0"
 
         ui_json = ""
         if ui_prefs is not None:
@@ -97,6 +100,7 @@ def salvar_dados(
             primary_light or "",
             primary_dark or "",
             ui_json,
+            fonte_val,
         ])
         cript = fernet.encrypt(dados.encode("utf-8"))
         with open(DADOS_PATH, "wb") as f:
@@ -107,15 +111,15 @@ def salvar_dados(
 
 def carregar_dados():
     """
-    Retorna sempre 7 valores:
-    (usuario, senha, ultima_senha, tema_escuro_bool, primary_light, primary_dark, ui_prefs_dict)
+    Retorna sempre 8 valores:
+    (usuario, senha, ultima_senha, tema_escuro_bool, primary_light, primary_dark, ui_prefs_dict, fonte_branca_bool)
 
     Mantém compatibilidade com arquivos antigos (3, 4, 6 linhas).
     """
     try:
         fernet = _get_fernet()
         if not os.path.exists(DADOS_PATH):
-            return None, None, None, False, None, None, None
+            return None, None, None, False, None, None, None,False
 
         with open(DADOS_PATH, "rb") as f:
             cript = f.read()
@@ -142,7 +146,11 @@ def carregar_dados():
                 except Exception:
                     ui_prefs = None
 
-        return usuario, senha, ultima, tema_escuro, primary_light, primary_dark, ui_prefs
+        fonte_raw = (linhas[7].strip() if len(linhas) > 7 else "0")
+        fonte_branca = fonte_raw == "1"
+
+
+        return usuario, senha, ultima, tema_escuro, primary_light, primary_dark, ui_prefs, fonte_branca
     except Exception as e:
         messagebox.showerror("Erro", f"Erro ao carregar os dados: {e}")
-        return None, None, None, False, None, None, None
+        return None, None, None, False, None, None, None, False
