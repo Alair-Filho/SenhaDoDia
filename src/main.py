@@ -14,6 +14,18 @@ senha_capturada = None
 tema_escuro = False
 fonte_branca = False
 
+ATALHOS = {
+    "getcard": "F2",
+    "fiserv": "F3",
+    "senha": "F4",
+    "toggle": "F5",
+    "atualizar": "F6",
+    "farma": "F7",
+    "fiscal": "F8",
+    "copiar": "F9",
+}
+
+
 
 
 # --- FONTES / LAYOUT ---
@@ -60,6 +72,9 @@ btn_visiveis = {
 }
 
 btn_grid_info = {}  # guarda o grid original de cada botão
+
+def texto_com_atalho(chave: str, texto: str) -> str:
+    return f"{ATALHOS[chave]} - {texto}"
 
 
 def ui(callable_):
@@ -121,12 +136,21 @@ def capturar_senha():
         return
 
     def tarefa():
-        ui(lambda: set_loading(btn_capturar, True, "Buscando...", "Buscar Senha do Dia"))
+        ui(lambda: set_loading(
+            btn_capturar,
+            True,
+            texto_com_atalho("senha", "Buscando..."),
+            texto_com_atalho("senha", "Buscar Senha do Dia")
+        ))
 
         senha_res, erro = email_services.buscar_senha_gmail(usuario, senha)
 
         def finish():
-            set_loading(btn_capturar, False, text_normal="Buscar Senha do Dia")
+            set_loading(
+                btn_capturar,
+                False,
+                text_normal=texto_com_atalho("senha", "Buscar Senha do Dia")
+            )
 
             if erro:
                 messagebox.showwarning("Aviso", erro)
@@ -144,6 +168,7 @@ def capturar_senha():
         ui(finish)
 
     run_bg(tarefa)
+
 
 
 def atualizar_atalho():
@@ -194,10 +219,11 @@ def copiar_para_clipboard():
 def toggle_senha_capturada():
     if lbl_senha_capturada.winfo_ismapped():
         lbl_senha_capturada.grid_remove()
-        btn_toggle.config(text="Mostrar Senha")
+        btn_toggle.config(text=texto_com_atalho("toggle", "Mostrar Senha"))
     else:
         lbl_senha_capturada.grid()
-        btn_toggle.config(text="Ocultar Senha")
+        btn_toggle.config(text=texto_com_atalho("toggle", "Ocultar Senha"))
+
 
 
 def _reaplicar_cor_botoes_principais():
@@ -370,7 +396,12 @@ def capturar_token_getcard():
         return
 
     def tarefa():
-        ui(lambda: set_loading(btn_capturar_token, True, "Buscando...", "Buscar Token GetCard"))
+        ui(lambda: set_loading(
+            btn_capturar_token,
+            True,
+            texto_com_atalho("getcard", "Buscando..."),
+            texto_com_atalho("getcard", "Buscar Token GetCard")
+        ))
 
         try:
             token, erro = email_services.buscar_token_getcard(usuario, senha)
@@ -378,7 +409,11 @@ def capturar_token_getcard():
             token, erro = None, f"Erro inesperado: {e}"
 
         def finish():
-            set_loading(btn_capturar_token, False, text_normal="Buscar Token GetCard")
+            set_loading(
+                btn_capturar_token,
+                False,
+                text_normal=texto_com_atalho("getcard", "Buscar Token GetCard")
+            )
 
             if erro:
                 messagebox.showwarning("Token não encontrado", erro)
@@ -405,7 +440,12 @@ def capturar_token_fiserv():
         return
 
     def tarefa():
-        ui(lambda: set_loading(btn_capturar_token_fiserv, True, "Buscando...", "Buscar Token Fiserv"))
+        ui(lambda: set_loading(
+            btn_capturar_token_fiserv,
+            True,
+            texto_com_atalho("fiserv", "Buscando..."),
+            texto_com_atalho("fiserv", "Buscar Token Fiserv")
+        ))
 
         try:
             token, erro = email_services.buscar_token_fiserv(usuario, senha)
@@ -413,7 +453,11 @@ def capturar_token_fiserv():
             token, erro = None, f"Erro inesperado: {e}"
 
         def finish():
-            set_loading(btn_capturar_token_fiserv, False, text_normal="Buscar Token Fiserv")
+            set_loading(
+                btn_capturar_token_fiserv,
+                False,
+                text_normal=texto_com_atalho("fiserv", "Buscar Token Fiserv")
+            )
 
             if erro:
                 messagebox.showwarning("Token não encontrado", erro)
@@ -595,7 +639,7 @@ btn_cores = tk.Button(
     highlightthickness=0,
     bd=0
 )
-btn_cores.place(x=10, y=-8)
+btn_cores.place(relx=1.0, x=20, y=-8, anchor="ne")
 
 btn_fonte = tk.Button(
     card,
@@ -607,13 +651,13 @@ btn_fonte = tk.Button(
     width=1,
     height=1,
     padx=6,
-    pady=1,
+    pady=2,
     cursor="hand2",
     activebackground=_initial_theme["bg_card"],
     highlightthickness=0,
     bd=0
 )
-btn_fonte.place(x=40, y=-8)  # ajuste o x se quiser mais perto/longe
+btn_fonte.place(relx=1.0, x=-8, y=-8, anchor="ne")  # ajuste o x se quiser mais perto/longe
 
 
 btn_config = tk.Button(
@@ -632,7 +676,7 @@ btn_config = tk.Button(
     highlightthickness=0,
     bd=0
 )
-btn_config.place(relx=1.0, x=20, y=-8, anchor="ne")
+btn_config.place(x=10, y=-8)
 
 
 # label de E-mail e senha
@@ -665,14 +709,14 @@ def criar_botao(texto, comando, linha):
     return b
 
 
-btn_capturar_token = criar_botao("Buscar Token GetCard", capturar_token_getcard, 5)
-btn_capturar_token_fiserv = criar_botao("Buscar Token Fiserv", capturar_token_fiserv, 6)
-btn_capturar = criar_botao("Buscar Senha do Dia", capturar_senha, 7)
-btn_toggle = criar_botao("Ocultar Senha", toggle_senha_capturada, 8)
-btn_atualizar = criar_botao("Atualizar Atalho", atualizar_atalho, 9)
-btn_abrir_vetor = criar_botao("Abrir VetorFarma", abrir_vetorfarma, 10)
-btn_abrir_vetorfiscal = criar_botao("Abrir VetorFiscal", abrir_vetorfiscal, 11)
-btn_copiar = criar_botao("Copiar Senha", copiar_para_clipboard, 12)
+btn_capturar_token = criar_botao("F2 - Buscar Token GetCard", capturar_token_getcard, 5)
+btn_capturar_token_fiserv = criar_botao("F3 - Buscar Token Fiserv", capturar_token_fiserv, 6)
+btn_capturar = criar_botao("F4 - Buscar Senha do Dia", capturar_senha, 7)
+btn_toggle = criar_botao("F5 - Ocultar Senha", toggle_senha_capturada, 8)
+btn_atualizar = criar_botao("F6 - Atualizar Atalho", atualizar_atalho, 9)
+btn_abrir_vetor = criar_botao("F7 - Abrir VetorFarma", abrir_vetorfarma, 10)
+btn_abrir_vetorfiscal = criar_botao("F8 - Abrir VetorFiscal", abrir_vetorfiscal, 11)
+btn_copiar = criar_botao("F9 - Copiar Senha", copiar_para_clipboard, 12)
 
 # guarda grid original (pra poder esconder/mostrar sem bagunçar layout)
 for b in [
@@ -748,6 +792,21 @@ atualizar_botao_tema(tema_escuro)
 
 # aplica visibilidade escolhida
 aplicar_visibilidade_botoes()
+
+def registrar_atalhos_f(janela: tk.Tk):
+    def bind_f(tecla: str, fn):
+        janela.bind_all(tecla, lambda e: fn())
+
+    bind_f("<F2>", capturar_token_getcard)
+    bind_f("<F3>", capturar_token_fiserv)
+    bind_f("<F4>", capturar_senha)
+    bind_f("<F5>", toggle_senha_capturada)
+    bind_f("<F6>", atualizar_atalho)
+    bind_f("<F7>", abrir_vetorfarma)
+    bind_f("<F8>", abrir_vetorfiscal)
+    bind_f("<F9>", copiar_para_clipboard)
+
+registrar_atalhos_f(janela)
 
 # ajusta após o primeiro desenho completo
 janela.after(200, ajustar_altura_janela)
